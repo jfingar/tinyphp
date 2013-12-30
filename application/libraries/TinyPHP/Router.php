@@ -98,9 +98,6 @@ class Router
 		if(!class_exists($controllerName)){
 			return false;
 		}
-		if(!method_exists($controllerName,$functionName)){
-			return false;
-		}
 		new $controllerName($functionName);
 		return true;
 	}
