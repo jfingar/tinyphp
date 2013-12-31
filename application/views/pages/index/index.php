@@ -1,3 +1,3 @@
 <div id="main-container">
-    Welcome to TinyPHP Skeleton Application!
+    Welcome to TinyPHP Skeleton Application!!
 </div>
