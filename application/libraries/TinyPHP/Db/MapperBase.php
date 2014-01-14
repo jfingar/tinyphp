@@ -1,154 +1,76 @@
 <?php
 namespace Libraries\TinyPHP\Db;
 use Libraries\TinyPHP\Db\Adapter;
-use Libraries\TinyPHP\Application;
-use \Exception;
 abstract class MapperBase
 {
-    private $adapter;
-    protected $primary_key = 'id';
-    protected $primary_key_getter = 'getId';
-    protected $primary_key_setter = 'setId';
-    protected $schema_name;
-    protected $table_name;
-    protected $model_name;
-    
-    abstract protected function setProperties($obj,$row);
-    abstract protected function getProperties($obj);
+    protected $_tableName;
+    protected $_primaryKeyField = 'id';
+    protected $_dbAdapter;
     
     public function __construct()
     {
-        $this->adapter = Adapter::GetMysqlAdapter();
-        if(!$this->schema_name){
-            $config = Application::$config;
-            $this->schema_name = isset($config['db_name']) ? $config['db_name'] : null;
-        }
-        if(!$this->schema_name){
-            throw new Exception("Please define a schema name in your config or in " . get_class($this));
-        }
-        if(!$this->table_name){
-            throw new Exception("Please define a table name in " . get_class($this));
-        }
-        if(!$this->model_name){
-            throw new Exception("Please specify the model name (\$model_name) in " . get_class($this));
-        }
+        $this->_dbAdapter = Adapter::GetMysqlAdapter();
     }
     
-    public function find($pk)
+    protected function find($pk)
     {
-        $prepared = array(':pk' => $pk);
-        $sql = "SELECT * FROM " . $this->schema_name . "." . $this->table_name . " WHERE " . $this->primary_key . " = :pk LIMIT 1";
-        $statement = $this->adapter->prepare($sql);
-        $statement->execute($prepared);
+        $params = array(':pk' => $pk);
+        $sql = "SELECT * FROM $this->_tableName WHERE $this->_primaryKeyField = :pk";
+        $this->_dbAdapter->prepare($sql);
+        $statement = $this->_dbAdapter->execute($params);
         $row = $statement->fetch();
-        if(empty($row)){
-            return false;
-        }
-        $obj = new $this->model_name();
-        $this->setProperties($obj,$row);
-        return $obj;
+        return $row;
     }
     
-    public function fetchRow($where = '',$params = array())
+    protected function fetchRow(array $params = array())
     {
-        $sql = "SELECT * FROM " . $this->schema_name . "." . $this->table_name;
-        if($where){
-            $sql .= " WHERE " . $where;
+        $sql = "SELECT * FROM $this->_tableName";
+        if(!empty($params)){
+            $sql .= " WHERE ";
+            $prepared = array();
+            $i = 1;
+            foreach($params as $columnName => $value){
+                $binding = ":" . $columnName;
+                $sql .= "$columnName = $binding";
+                if($i < count($params)){
+                    $sql .= " AND ";
+                }
+                $prepared[$binding] = $value;
+                $i++;
+            }
         }
-        $sql .= " LIMIT 1";
-        $statement = $this->adapter->prepare($sql);
-        $statement->execute($params);
+        $this->_dbAdapter->prepare($sql);
+        $statement = $this->_dbAdapter->execute($prepared);
         $row = $statement->fetch();
-        if(empty($row)){
-            return false;
-        }
-        $obj = new $this->model_name();
-        $this->setProperties($obj,$row);
-        return $obj;
+        return $row;
     }
     
-    public function fetchAll($where = '',$params = array())
+    protected function fetchAll($params = array(), $orderBy = '', $limit = '')
     {
-        $sql = "SELECT * FROM " . $this->schema_name . "." . $this->table_name;
-        if($where){
-            $sql .= " WHERE " . $where;
-        }
-        $statement = $this->adapter->prepare($sql);
-        $statement->execute($params);
-        $resultSet = $statement->fetchAll();
-        if(empty($resultSet)){
-            return array();
-        }
-        $collection = array();
-        foreach($resultSet as $row){
-            $obj = new $this->model_name();
-            $this->setProperties($obj,$row);
-            $collection[] = $obj;
-        }
-        return $collection;
-    }
-    
-    public function toArray($objectOrCollection)
-    {
-        $returnArray = array();
-        if(is_array($objectOrCollection)){
-            foreach($objectOrCollection as $k => $obj){
-                $returnArray[$k] = $this->objectToArray($obj);
+        $sql = "SELECT * FROM $this->_tableName";
+        if(!empty($params)){
+            $sql .= " WHERE ";
+            $prepared = array();
+            $i = 1;
+            foreach($params as $columnName => $value){
+                $binding = ":" . $columnName;
+                $sql .= "$columnName = $binding";
+                if($i < count($params)){
+                    $sql .= " AND ";
+                }
+                $prepared[$binding] = $value;
+                $i++;
             }
-        }else{
-            $returnArray = $this->objectToArray($objectOrCollection);
         }
-        return $returnArray;
-    }
-    
-    private function objectToArray($obj)
-    {
-        $returnArray = array();
-        $properties = $this->getProperties($obj);
-        foreach($properties as $property => $value){
-            $returnArray[$property] = $value;
+        if($orderBy){
+            $sql .= " ORDER BY $orderBy";
         }
-        return $returnArray;
-    }
-    
-    public function save($obj)
-    {
-        if($obj->{$this->primary_key_getter}()){
-            $sql = "UPDATE ";
-        }else{
-            $sql = "INSERT INTO ";
+        if($limit){
+            $sql .= " LIMIT $limit";
         }
-        $sql .= $this->schema_name . "." . $this->table_name;
-        $sql .= " SET ";
-        $params = $this->getProperties($obj);
-        $prepared = array();
-        $i = 1;
-        foreach($params as $param => $value){
-            $prepared[':' . $param] = $value;
-            $sql .= $param . " = :" . $param;
-            if($i < count($params)){
-                $sql .= ", ";
-            }
-            $i++;
-        }
-        if($obj->{$this->primary_key_getter}()){
-            $sql .= " WHERE " . $this->primary_key . " = :id";
-        }
-        $statement = $this->adapter->prepare($sql);
-        $statement->execute($prepared);
-        $obj->{$this->primary_key_setter}($this->adapter->lastInsertId());
-    }
-    
-    public function delete($obj = null,$where = '')
-    {
-        if($obj){
-            $sql = "DELETE FROM " . $this->schema_name . "." . $this->table_name . " WHERE " . $this->primary_key . " = " . $obj->{$this->primary_key_getter}();
-            $this->adapter->exec($sql);
-        }else if($where){
-            $sql = "DELETE FROM " . $this->schema_name . "." . $this->table_name . " WHERE " . $where;
-            $this->adapter->exec($sql);
-        }else{
-            throw new Exception("Please provide either an object (arg 1) or a where clause (arg 2) for delete");
-        }
+        $this->_dbAdapter->prepare($sql);
+        $statement = $this->_dbAdapter->execute($prepared);
+        $rowSet = $statement->fetchAll();
+        return $rowSet;
     }
 }
