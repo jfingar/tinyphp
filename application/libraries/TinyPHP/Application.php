@@ -53,15 +53,18 @@ class Application
         });
     }
 	
-    public static function initAutoload()
+    public static function initAutoload($autoloadBaseDir = '')
     {
-        spl_autoload_register(function($class){
+        spl_autoload_register(function($class) use ($autoloadBaseDir){
             $class = str_replace("\\",DIRECTORY_SEPARATOR,$class);
             $classParts = explode(DIRECTORY_SEPARATOR,$class);
-            $pathToClassFile = Application::$APPLICATION_DIR;
+            if(!$autoloadBaseDir){
+                $autoloadBaseDir = Application::$APPLICATION_DIR;
+            }
+            $pathToClassFile = $autoloadBaseDir;
             foreach($classParts as $k => $part){
                 if($k + 1 < count($classParts)){
-                    if(in_array($part,array('Libraries','Controllers','Models','Helpers','Mappers'))){
+                    if(in_array($part,array('Libraries','Controllers','Models','Helpers','Mappers','Tables'))){
                         $pathToClassFile .= strtolower($part) . DIRECTORY_SEPARATOR;
                     }else{
                         $pathToClassFile .= ucfirst($part) . DIRECTORY_SEPARATOR;
@@ -76,9 +79,9 @@ class Application
         });
     }
 	
-    public static function initConfig()
+    public static function initConfig($iniFilePath = '')
     {
-        self::buildConfig(self::$env);
+        self::buildConfig(self::$env,$iniFilePath);
         // timezone
         $tz = isset(self::$config['timezone']) ? self::$config['timezone'] : 'America/Phoenix';
         date_default_timezone_set($tz);
@@ -99,9 +102,10 @@ class Application
         }
     }
     
-    private static function buildConfig($env)
+    private static function buildConfig($env,$iniFilePath = '')
     {
-        $fullConf = parse_ini_file(self::$CONFIG_DIR . 'config.ini',true);
+        $confPath = $iniFilePath ? $iniFilePath : self::$CONFIG_DIR . 'config.ini';
+        $fullConf = parse_ini_file($confPath,true);
         $sections = array_keys($fullConf);
         foreach($sections as $section){
             if(strpos($section,':') !== false){
@@ -110,7 +114,7 @@ class Application
                 if($env == $childSection){
                     $key = $childSection . ':' . $parentSection;
                     array_push(self::$config,$fullConf[$key]);
-                    self::buildConfig($parentSection);
+                    self::buildConfig($parentSection,$confPath);
                 }
             }else{
                 if($env == $section){

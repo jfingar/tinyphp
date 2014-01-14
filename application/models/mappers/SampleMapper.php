@@ -1,11 +1,28 @@
 <?php
+/**
+ * Mappers are an extra "convenience" layer that use the base Table object methods to interact with table rows and map them to Model objects.
+ * If something you are trying to do is not available via the mapper, you can a) write new methods in here or b) use the Table object directly by calling the getTable() method.
+ */
 namespace Models\Mappers;
 use Libraries\TinyPHP\Db\IMappable;
-use Libraries\TinyPHP\Db\MapperBase;
 use Models\SampleModel;
-class SampleMapper extends MapperBase implements IMappable
+use Models\Mappers\Tables\SampleTable;
+class SampleMapper implements IMappable
 {
-    protected $_tableName = 'table_name';
+    private $_table;
+    
+    /**
+     * Get an instance of the underlying Table class, which can use methods hidden in TableBase.php directly.
+     * 
+     * @return SampleTable
+     */
+    public function getTable()
+    {
+        if($this->_table === null){
+            $this->_table = new SampleTable();
+        }
+        return $this->_table;
+    }
     
     /**
      * Retrieve a row by Primary Key and return an object with properties mapped.
@@ -16,69 +33,90 @@ class SampleMapper extends MapperBase implements IMappable
      */
     public function find($pk)
     {
-        $row = parent::find($pk);
+        $row = $this->getTable()->find($pk);
         if(!$row){
             return false;
         }
         $sampleModel = new SampleModel();
         $sampleModel->setId($row['id'])
-                    ->setProperty1($row['property_1'])
-                    ->setProperty2($row['property_2'])
-                    ->setProperty3($row['property_3']);
+                    ->setProperty1($row['property1'])
+                    ->setProperty2($row['property2']);
         return $sampleModel;
     }
     
     /**
-     * Fetch a single row based on sql WHERE clause parameters (filter)
-     * Pass an array formatted as key = filter column name | value = filter value
+     * Fetch a single row based on sql WHERE clause parameters
      * 
-     * @param array $params
-     * @return boolean|\Models\SampleModel
+     * @param array $params | Array formatted as key = column name | value = value
+     * @return boolean | SampleModel
      */
     public function fetchRow(array $params = array())
     {
-        $row = parent::fetchRow($params);
+        $row = $this->getTable()->fetchRow($params);
         if(!$row){
             return false;
         }
         $sampleModel = new SampleModel();
         $sampleModel->setId($row['id'])
-                    ->setProperty1($row['property_1'])
-                    ->setProperty2($row['property_2'])
-                    ->setProperty3($row['property_3']);
+                    ->setProperty1($row['property1'])
+                    ->setProperty2($row['property2']);
         return $sampleModel;
     }
     
     /**
-     * Fetch rows based on sql WHERE clause parameters (filter) and return an array of objects
+     * Fetch rows based on sql WHERE clause parameters and return an array of objects
      * 
-     * @param array $params | Array formatted as key = filter column name | value = filter value
+     * @param array $params | Array formatted as key = column name | value = value
      * @param string $orderBy | "ORDER BY" clause (do not include keywords ORDER BY)
      * @param int $limit | "LIMIT" clause (do not include keyword LIMIT)
      * @return array
      */
-    public function fetchAll($params = array(), $orderBy = '', $limit = '')
+    public function fetchAll(array $params = array(), $orderBy = '', $limit = '')
     {
-        $rowSet = parent::fetchAll($params, $orderBy, $limit);
+        $rowSet = $this->getTable()->fetchAll($params,$orderBy,$limit);
         $resultSet = array();
         foreach($rowSet as $row){
             $sampleModel = new SampleModel();
             $sampleModel->setId($row['id'])
-                    ->setProperty1($row['property_1'])
-                    ->setProperty2($row['property_2'])
-                    ->setProperty3($row['property_3']);
+                    ->setProperty1($row['property1'])
+                    ->setProperty2($row['property2']);
             $resultSet[] = $sampleModel;
         }
         return $resultSet;
     }
     
+    /**
+     * Save or update the object provided. If an id is set on the object, it will perform an update on that row. Otherwise it will create a new row.
+     * 
+     * @param type SampleModel
+     * @return void
+     */
     public function save($obj)
     {
-        
+        $params = array(
+            "property1" => $obj->getProperty1(),
+            "property2" => $obj->getProperty2()
+        );
+        $pk = (int) $obj->getId();
+        if($pk > 0){
+            $this->getTable()->update($params, array("id" => $pk));
+        }else{
+            $pk = $this->getTable()->insert($params);
+            $obj->setId($pk);
+        }
     }
     
-    public function delete($obj = null, $params = array())
+    /**
+     * Delete the object's corresponding table row. id must be set on the object
+     * 
+     * @param type SampleModel
+     */
+    public function delete($obj)
     {
-        
+        $id = $obj->getId();
+        if(!$id){
+            return false;
+        }
+        $this->getTable()->delete(array("id" => $id));
     }
 }

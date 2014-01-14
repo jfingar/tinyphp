@@ -5,7 +5,6 @@ class SampleModel
     private $_id;
     private $_property1;
     private $_property2;
-    private $_property3;
     
     public function setId($val)
     {
@@ -38,16 +37,5 @@ class SampleModel
     public function getProperty2()
     {
         return $this->_property2;
-    }
-    
-    public function setProperty3($val)
-    {
-        $this->_property3 = $val;
-        return $this;
-    }
-    
-    public function getProperty3()
-    {
-        return $this->_property3;
     }
 }
