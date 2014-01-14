@@ -38,9 +38,7 @@ class SampleMapper implements IMappable
             return false;
         }
         $sampleModel = new SampleModel();
-        $sampleModel->setId($row['id'])
-                    ->setProperty1($row['property1'])
-                    ->setProperty2($row['property2']);
+        $this->_map($sampleModel, $row);
         return $sampleModel;
     }
     
@@ -57,9 +55,7 @@ class SampleMapper implements IMappable
             return false;
         }
         $sampleModel = new SampleModel();
-        $sampleModel->setId($row['id'])
-                    ->setProperty1($row['property1'])
-                    ->setProperty2($row['property2']);
+        $this->_map($sampleModel, $row);
         return $sampleModel;
     }
     
@@ -77,9 +73,7 @@ class SampleMapper implements IMappable
         $resultSet = array();
         foreach($rowSet as $row){
             $sampleModel = new SampleModel();
-            $sampleModel->setId($row['id'])
-                    ->setProperty1($row['property1'])
-                    ->setProperty2($row['property2']);
+            $this->_map($sampleModel, $row);
             $resultSet[] = $sampleModel;
         }
         return $resultSet;
@@ -118,5 +112,12 @@ class SampleMapper implements IMappable
             return false;
         }
         $this->getTable()->delete(array("id" => $id));
+    }
+    
+    public function _map($obj, $row)
+    {
+        $obj->setId($row['id'])
+            ->setProperty1($row['property1'])
+            ->setProperty2($row['property2']);
     }
 }

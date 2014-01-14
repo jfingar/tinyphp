@@ -2,6 +2,7 @@
 namespace Libraries\TinyPHP\Db;
 interface IMappable
 {
+    public function _map($obj, $row);
     public function getTable();
     public function find($pk);
     public function fetchRow(array $params = array());
