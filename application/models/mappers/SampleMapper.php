@@ -6,7 +6,7 @@
 namespace Models\Mappers;
 use Libraries\TinyPHP\Db\IMappable;
 use Models\SampleModel;
-use Models\Mappers\Tables\SampleTable;
+use Models\Tables\SampleTable;
 class SampleMapper implements IMappable
 {
     private $_table;

@@ -1,5 +1,5 @@
 <?php
-namespace Models\Mappers\Tables;
+namespace Models\Tables;
 use Libraries\TinyPHP\Db\TableBase;
 class SampleTable extends TableBase
 {
