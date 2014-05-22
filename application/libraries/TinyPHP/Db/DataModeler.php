@@ -54,22 +54,46 @@ HERE;
 namespace Models;
 class $className
 {
+
 HERE;
         $sql = "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = '" . self::$_schemaName . "' AND TABLE_NAME = '" . $tableName  . "'";
-//        
-//    protected \$_id;
-//	
-//    public function getId()
-//    {
-//            return \$this->_id;
-//    }
-//
-//    public function setId($id)
-//    {
-//            $this->_id = $id;
-//            return $this;
-//    }
-//}
+		$dbAdapter = Adapter::GetMysqlAdapter();
+		$statement = $dbAdapter->query($sql);
+		$columnRows = $statement->fetchAll();
+		
+		foreach($columnRows as $column){
+			$property = self::getProperty($column['COLUMN_NAME']);
+			$textString .= <<<HERE
+    private $property;\r\n
+HERE;
+		}
+		
+		$textString .= "\r\n";
+		
+		foreach($columnRows as $column){
+			$methodName = str_replace("_", " ",$column['COLUMN_NAME']);
+			$methodName = ucwords($methodName);
+			$getterMethodName = 'get' . str_replace(" ", "", $methodName);
+			$setterMethodName = 'set' . str_replace(" ", "", $methodName);
+			$property = substr(self::getProperty($column['COLUMN_NAME']),1);
+			$textString .= <<<HERE
+    public function $getterMethodName()
+	{
+		return \$this->$property;
+    }
+
+    public function $setterMethodName(\$$property)
+	{
+		\$this->$property = \$$property;
+		return \$this;
+	}
+
+
+HERE;
+		}
+		
+		$textString .= '}';
+		
         fwrite($phpFile, $textString);
         fclose($phpFile);
     }
@@ -98,4 +122,13 @@ HERE;
         }
         return $className;
     }
+	
+	private static function getProperty($columnName)
+	{
+		$property = str_replace("_", " ", $columnName);
+		$property = ucwords($property);
+		$property = str_replace(" ","",$property);
+		$property = "\$_" . lcfirst($property);
+		return $property;
+	}
 }
