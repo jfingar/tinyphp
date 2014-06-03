@@ -1,5 +1,5 @@
 <?php
-echo "CLI UNIT TESTS MUST BE RUN FROM THE application/unit_tests DIRECTORY!\r\n\r\n";
+// CLI UNIT TESTS MUST BE RUN FROM THE application/unit_tests DIRECTORY!
 require_once '../libraries/TinyPHP/Application.php';
 Libraries\TinyPHP\Application::$env = 'development';
 Libraries\TinyPHP\Application::initAutoload('../');
