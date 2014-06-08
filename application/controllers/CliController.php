@@ -3,9 +3,8 @@ namespace Controllers;
 use Libraries\TinyPHP\ControllerBase;
 class CliController extends ControllerBase
 {
-    public function SampleCliFunction()
+    public function DataModel()
     {
-        // perform some logic that you want to run from the command line
-        echo "Hello From the Command Line!\r\n";
+        \Libraries\TinyPHP\Db\DataModeler::WriteModels('photo_cloud');
     }
 }
