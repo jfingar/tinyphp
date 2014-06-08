@@ -4,6 +4,7 @@ use Libraries\TinyPHP\Db\Adapter;
 abstract class TableBase
 {
     protected $_tableName;
+	protected $_schemaName;
     protected $_primaryKeyField = 'id';
     protected $_dbAdapter;
     
@@ -15,16 +16,24 @@ abstract class TableBase
     public function find($pk)
     {
         $params = array(':pk' => $pk);
-        $sql = "SELECT * FROM $this->_tableName WHERE $this->_primaryKeyField = :pk";
+        $sql = "SELECT * FROM ";
+		if($this->_schemaName){
+			$sql .= $this->_schemaName . ".";
+		}
+		$sql .= "$this->_tableName WHERE $this->_primaryKeyField = :pk";
         $statement = $this->_dbAdapter->prepare($sql);
         $statement->execute($params);
         $row = $statement->fetch();
         return $row;
     }
     
-    public function fetchRow(array $params = array())
+    public function fetchRow(array $params = array(), $orderBy = '')
     {
-        $sql = "SELECT * FROM $this->_tableName";
+        $sql = "SELECT * FROM ";
+		if($this->_schemaName){
+			$sql .= $this->_schemaName . ".";
+		}
+		$sql .= $this->_tableName;
         $prepared = array();
         if(!empty($params)){
             $sql .= " WHERE ";
@@ -39,6 +48,10 @@ abstract class TableBase
                 $i++;
             }
         }
+		if($orderBy){
+			$sql .= " ORDER BY $orderBy";
+		}
+		$sql .= " LIMIT 1";
         $statement = $this->_dbAdapter->prepare($sql);
         $statement->execute($prepared);
         $row = $statement->fetch();
@@ -47,7 +60,11 @@ abstract class TableBase
     
     public function fetchAll($params = array(), $orderBy = '', $limit = '')
     {
-        $sql = "SELECT * FROM $this->_tableName";
+        $sql = "SELECT * FROM ";
+		if($this->_schemaName){
+			$sql .= $this->_schemaName . ".";
+		}
+		$sql .= $this->_tableName;
         $prepared = array();
         if(!empty($params)){
             $sql .= " WHERE ";
@@ -73,7 +90,11 @@ abstract class TableBase
     
     public function insert(array $params)
     {
-        $sql = "INSERT INTO " . $this->_tableName . " SET ";
+        $sql = "INSERT INTO ";
+		if($this->_schemaName){
+			$sql .= $this->_schemaName . ".";
+		}
+		$sql .= $this->_tableName . " SET ";
         $prepared = array();
         $i = 1;
         foreach($params as $columnName => $value){
@@ -94,7 +115,11 @@ abstract class TableBase
     
     public function update(array $updateParams, array $whereParams)
     {
-        $sql = "UPDATE " . $this->_tableName . " SET ";
+        $sql = "UPDATE ";
+		if($this->_schemaName){
+			$sql .= $this->_schemaName . ".";
+		}
+		$sql .= $this->_tableName . " SET ";
         $prepared = array();
         $i = 1;
         foreach($updateParams as $columnName => $value){
@@ -122,7 +147,11 @@ abstract class TableBase
     
     public function delete(array $whereParams)
     {
-        $sql = "DELETE FROM " . $this->_tableName . " WHERE ";
+        $sql = "DELETE FROM ";
+		if($this->_schemaName){
+			$sql .= $this->_schemaName . ".";
+		}
+		$sql .= $this->_tableName . " WHERE ";
         $i = 1;
         $prepared = array();
         foreach($whereParams as $columnName => $value){
