@@ -131,9 +131,9 @@ class $className implements IMappable
         return \$obj;
     }
         
-    public function fetchRow(array \$params = array())
+    public function fetchRow(array \$params = array(), \$orderBy = '')
     {
-        \$row = \$this->getTable()->fetchRow(\$params);
+        \$row = \$this->getTable()->fetchRow(\$params, \$orderBy);
         if(!\$row){
             return false;
         }
