@@ -115,7 +115,7 @@ class $className implements IMappable
     public function getTable()
     {
         if(\$this->_table === null){
-            \$this->_table = new {$className}_Table;
+            \$this->_table = new {$className}_Table();
         }
         return \$this->_table;
     }
