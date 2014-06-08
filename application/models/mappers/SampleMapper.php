@@ -48,9 +48,9 @@ class SampleMapper implements IMappable
      * @param array $params | Array formatted as key = column name | value = value
      * @return boolean | SampleModel
      */
-    public function fetchRow(array $params = array())
+    public function fetchRow(array $params = array(), $orderBy = '')
     {
-        $row = $this->getTable()->fetchRow($params);
+        $row = $this->getTable()->fetchRow($params, $orderBy);
         if(!$row){
             return false;
         }
