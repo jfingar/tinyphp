@@ -10,6 +10,7 @@ abstract class ControllerBase{
     protected $suppressLayout = false;
     protected $scripts = array();
     protected $stylesheets = array();
+    protected $_rawPostData = '';
     private $functionName;
     private $content;
 	
@@ -17,6 +18,7 @@ abstract class ControllerBase{
     {
         $bootstrap = new \Bootstrap($this);
         $bootstrap->run();
+        $this->_rawPostData = file_get_contents("php://input");
         $this->init();
         if(method_exists($this,$func)){
             $this->functionName = $func;
