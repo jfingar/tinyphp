@@ -4,7 +4,7 @@ class Debug
 {
     public static function log($var,$file = 'log')
     {
-        if(!$var){
+        if(!is_array($var) && !$var){
             $var = 'null';
         }
         $output = print_r($var,true) . "\r\n";
