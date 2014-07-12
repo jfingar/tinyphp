@@ -18,6 +18,21 @@ abstract class TableBase
 	$this->_dbAdapter = Adapter::GetMysqlAdapter();
     }
     
+    public function beginTransaction()
+    {
+        $this->_dbAdapter->beginTransaction();
+    }
+    
+    public function commit()
+    {
+        $this->_dbAdapter->commit();
+    }
+    
+    public function rollBack()
+    {
+        $this->_dbAdapter->rollBack();
+    }
+    
     public function getLastStatement()
     {
 	return $this->_lastStatement;
