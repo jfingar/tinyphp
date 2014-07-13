@@ -1,7 +1,8 @@
 <?php
 namespace Libraries\TinyPHP;
 use Controllers\LayoutController;
-abstract class ControllerBase{
+abstract class ControllerBase
+{
 	
     protected $view;
     protected $layout = 'layout';
@@ -113,6 +114,70 @@ abstract class ControllerBase{
             }
         }
         return $stylesheetsString;
+    }
+    
+    protected function getParams($type = 'POST', $allowed = array())
+    {
+        $type = strtoupper($type);
+        switch($type){
+            case 'POST' :
+                $params = $_POST;
+            break;
+            case 'GET' :
+                $params = $_GET;
+            break;
+            case 'REQUEST' :
+                $params = $_REQUEST;
+            break;
+            default :
+                $params = array();
+        }
+        
+        if(!empty($allowed)){
+            $this->sanitizeParams($allowed, $params);
+        }
+        
+        return $params;
+    }
+    
+    protected function sanitizeParams(array $allowed, &$params)
+    {
+        if(!empty($allowed)){
+            foreach($allowed as $param){
+                if(!isset($params[$param])){
+                    $params[$param] = null;
+                }
+            }
+            foreach($params as $key => $val){
+                if(!in_array($key, $allowed)){
+                    unset($params[$key]);
+                }
+            }
+        }
+    }
+    
+    protected function getRawPostParams($jsonDecode = false)
+    {
+        $params = $this->_rawPostData;
+        if($jsonDecode){
+            $params = json_decode($params);
+            $params = (array) $params;
+        }
+        return $params;
+    }
+    
+    protected function getParam($name, $default = '', $allowed = array())
+    {
+        $param = isset($_REQUEST[$name]) ? $_REQUEST[$name] : null;
+        if(!$param && $default){
+            $param = $default;
+        }
+        if(!empty($allowed)){
+            if(!in_array($name, $allowed)){
+                return false;
+            }
+        }
+        return $param;
     }
     
     public function addStylesheet($link)
